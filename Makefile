@@ -3,8 +3,10 @@ OBJ+=lodepng/lodepng.o
 OBJ += parse.o
 CFLAGS += -Irunt -Ilodepng -std=c89 -Wall -pedantic
 
+default: pixku testimage
+
 pixku: $(OBJ)
 	$(CC) $(CFLAGS) $(OBJ) -o $@
 
 clean:
-	$(RM) pixku $(OBJ)
+	$(RM) pixku $(OBJ) testimage
