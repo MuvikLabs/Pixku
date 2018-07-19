@@ -1,0 +1,3 @@
+[submodule "runt"]
+	path = runt
+	url = git://github.com/MuvikLabs/runt.git
