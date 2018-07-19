@@ -32,3 +32,9 @@ The command `0 255 128 64 pxclr` will set color 0 to be the RGB color
 
 The word `pxsave` will save the contents to a PNG file. The command
 `"out.png" pxsave` will write to a file called "out.png".
+
+## Examples
+
+The best way to interact with Pixku is to write programs that write Pixku
+programs. [A small program in C](testimage.c) was used to generate the
+test program which generates the example image included in this repository.
