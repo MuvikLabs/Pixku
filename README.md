@@ -23,8 +23,8 @@ Pixku has special words defined.
 
 The word `pxpt` will draw a pixel point at a given XY location with a specified
 palette color. The command `1 2 3 pxpt` will draw a pixel at location (1, 2)
-with color number 3. The default colors can be seen in the test image
-"pixku.png".
+with color number 3. The default colors and their numeric values can be seen in
+the test image "pixku.png".
 
 The word `pxclr` will set the particular color in the color palette.
 The command `0 255 128 64 pxclr` will set color 0 to be the RGB color
