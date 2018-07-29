@@ -44,8 +44,8 @@ static void default_palette(void)
 static int pxpt(int x, int y, int clr)
 {
     if(x < 0 || x >= WIDTH) return 0;
-    if(y < 0 || y >= HEIGHT) return 0;
-    if(clr < 0 || clr >= NCOLORS) return 0;
+    if(y < 0 || y >= HEIGHT) return -1;
+    if(clr < 0 || clr >= NCOLORS) return -2;
 
     buf[y * WIDTH + x] = clr;
     return 1;
@@ -98,7 +98,20 @@ static runt_int rproc_pxpt(runt_vm *vm, runt_ptr p)
 
     rc = pxpt(x, y, c);
 
-    if(!rc) return RUNT_NOT_OK;
+    if(rc <= 0) {
+        switch(rc) {
+            case 0:
+                runt_print(vm, "x value %d out of range\n", x);
+                break;
+            case -1:
+                runt_print(vm, "y value %d out of range\n", y);
+                break;
+            case -2:
+                runt_print(vm, "color value %d out of range\n", c);
+                break;
+        }
+        return RUNT_NOT_OK;
+    }
 
     return RUNT_OK;
 }
@@ -130,7 +143,7 @@ static runt_int rproc_pxclr(runt_vm *vm, runt_ptr p)
 
     rc = set_color(c, r, g, b);
 
-    if(!rc) return RUNT_NOT_OK;
+    if(rc <= 0) return RUNT_NOT_OK;
     return RUNT_OK;
 }
 
