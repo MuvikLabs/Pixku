@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "runt.h"
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
 #include "lodepng.h"
 
 #define WIDTH 256
@@ -76,108 +78,92 @@ int pxsave(const char *filename)
     return 1;
 }
 
-static runt_int rproc_pxpt(runt_vm *vm, runt_ptr p)
+/* pxpt(x, y, c) */
+
+static int l_pxpt(lua_State *L)
 {
-    runt_int rc;
-    runt_int x;
-    runt_int y;
-    runt_int c;
-    runt_stacklet *s;
+    int x;
+    int y;
+    int c;
+    int rc;
 
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    c = s->f;
-
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    y = s->f;
-
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    x = s->f;
-
+    x = luaL_checkinteger(L, 1);
+    y = luaL_checkinteger(L, 2);
+    c = luaL_checkinteger(L, 3);
     rc = pxpt(x, y, c);
 
     if(rc <= 0) {
         switch(rc) {
             case 0:
-                runt_print(vm, "x value %d out of range\n", x);
+                luaL_error(L, "x value %d out of range\n", x);
                 break;
             case -1:
-                runt_print(vm, "y value %d out of range\n", y);
+                luaL_error(L, "y value %d out of range\n", y);
                 break;
             case -2:
-                runt_print(vm, "color value %d out of range\n", c);
+                luaL_error(L, "color value %d out of range\n", c);
                 break;
         }
-        return RUNT_NOT_OK;
     }
 
-    return RUNT_OK;
+    return 0;
 }
 
-static runt_int rproc_pxclr(runt_vm *vm, runt_ptr p)
+/* pxclr(c, r, g, b) */
+
+static int l_pxclr(lua_State *L)
 {
-    runt_int rc;
-    runt_int r;
-    runt_int g;
-    runt_int b;
-    runt_int c;
-    runt_stacklet *s;
+    int r;
+    int g;
+    int b;
+    int c;
+    int rc;
 
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    b = s->f;
-
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    g = s->f;
-
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    r = s->f;
-
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    c = s->f;
+    c = luaL_checkinteger(L, 1);
+    r = luaL_checkinteger(L, 2);
+    g = luaL_checkinteger(L, 3);
+    b = luaL_checkinteger(L, 4);
 
     rc = set_color(c, r, g, b);
 
-    if(rc <= 0) return RUNT_NOT_OK;
-    return RUNT_OK;
+
+    if (rc <= 0) luaL_error(L, "Problem with pixclr");
+    return 0;
 }
 
-static runt_int rproc_pxsave(runt_vm *vm, runt_ptr p)
+/* pxsave(filename) */
+static int l_pxsave(lua_State *L)
 {
     const char *filename;
-    runt_int rc;
-    runt_stacklet *s;
 
-    rc = runt_ppop(vm, &s);
-    RUNT_ERROR_CHECK(rc);
-    filename = runt_to_string(s->p);
-
+    filename = luaL_checkstring(L, 1);
     pxsave(filename);
-    return RUNT_OK;
+    return 0;
 }
 
-static void load_pixku(runt_vm *vm)
+static const luaL_Reg pixkulib[] = {
+    {"pt", l_pxpt},
+    {"clr", l_pxclr},
+    {"save", l_pxsave},
+    {NULL, NULL}
+};
+
+int sglua_main(int argc, char **argv, void (*loader)(lua_State*));
+
+static int open_pixku(lua_State *L)
+{
+    luaL_newlib(L, pixkulib);
+    return 1;
+}
+
+static void pixku_loader(lua_State *L)
 {
     default_palette();
     zero_out_buffers();
-    runt_keyword_define(vm, "pxpt", 4, rproc_pxpt, NULL);
-    runt_keyword_define(vm, "pxclr", 5, rproc_pxclr, NULL);
-    runt_keyword_define(vm, "pxsave", 6, rproc_pxsave, NULL);
-}
-
-static runt_int loader(runt_vm *vm)
-{
-    runt_load_stdlib(vm);
-    load_pixku(vm);
-    return runt_is_alive(vm);
+    luaL_requiref(L, "pixku", open_pixku, 1);
 }
 
 int main(int argc, char *argv[])
 {
-    return irunt_begin(argc, argv, loader);
+    return sglua_main(argc, argv, pixku_loader);
 }
